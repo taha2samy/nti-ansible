@@ -47,6 +47,8 @@ services:
     ports:
       - "2223:22"
 ```
+#### **dockerfile:**
+
 ```dockerfile
 # Use the official Ubuntu image as the base image
 FROM ubuntu:latest
@@ -103,7 +105,7 @@ Now that you've defined the `docker-compose.yml` file, let's build and start the
 1. **Build and Start the Containers:**
 
    ```bash
-   docker-compose up -d
+docker-compose up -d --build
    ```
 
    This command will:
@@ -127,7 +129,9 @@ Now that you've defined the `docker-compose.yml` file, let's build and start the
    efgh5678       ubuntu:latest  "/usr/sbin/sshd -D"      2 minutes ago    Up 2 minutes    0.0.0.0:2222->22/tcp   container_2
    ijkl91011      ubuntu:latest  "/usr/sbin/sshd -D"      2 minutes ago    Up 2 minutes    0.0.0.0:2223->22/tcp   container_3
    ```
+   ![alt text](image.png)
 
+    
    The `PORTS` column should show that each container is accessible on different ports (2221, 2222, and 2223) on your localhost.
 
 ---
@@ -141,6 +145,7 @@ sudo ssh -i id_rsa -p 2221 root@localhost
 sudo ssh -i id_rsa -p 2222 root@localhost
 sudo ssh -i id_rsa -p 2223 root@localhost
 ```
+![alt text](image-1.png)
 
 If the SSH connection works correctly, you'll be able to access the containers' shell.
 
@@ -182,7 +187,7 @@ Now that your containers are running SSH services, and you can SSH into them, it
        "ping": "pong"
    }
    ```
-
+![alt text](image-2.png)
 ---
 
 ### **7. Visual Representation of the Setup**
