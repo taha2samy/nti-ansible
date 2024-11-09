@@ -16,7 +16,7 @@ UsePAM no
 ChallengeResponseAuthentication no
 
 # Allow users to connect
-AllowUsers root
+AllowUsers root nti
 
 # Use a specific port (optional)
 # Port 2221
