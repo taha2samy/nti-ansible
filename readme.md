@@ -509,8 +509,107 @@ In this example:
 
 ---
 
-### **6. Recap and Next Steps**
 
+### **7. Running Commands on Containers with Ansible**
+
+In this section, we will explain how to run commands on the containers using Ansible, using the `command` module, and also how to run commands with elevated privileges (like `sudo`).
+
+#### **Example: Running the `whoami` Command**
+
+Let’s start by running the simple `whoami` command on the containers to identify the currently logged-in user. You can run the following command:
+
+```bash
+ansible ubuntu_containers -m command -a 'whoami'
+```
+
+##### **Explanation of the Command:**
+
+- `ansible`: The command-line tool for executing Ansible commands.
+- `ubuntu_containers`: This is the group of containers defined in the Ansible inventory file (e.g., containers in your `inventory.ini` file).
+- `-m command`: The `-m` flag specifies the module to use. In this case, the `command` module is used to run shell commands.
+- `-a 'whoami'`: The `-a` flag specifies the argument for the module. Here, `'whoami'` is the shell command we want to execute on each container.
+
+##### **Sample Output:**
+
+```bash
+[WARNING]: sftp transfer mechanism failed on [localhost]. Use ANSIBLE_DEBUG=1 to see detailed information
+[WARNING]: scp transfer mechanism failed on [localhost]. Use ANSIBLE_DEBUG=1 to see detailed information
+[WARNING]: Platform linux on host container_2 is using the discovered Python interpreter at /usr/bin/python3.12, but
+future installation of another Python interpreter could change the meaning of that path. See
+https://docs.ansible.com/ansible-core/2.17/reference_appendices/interpreter_discovery.html for more information.
+container_2 | CHANGED | rc=0 >>
+root
+[WARNING]: Platform linux on host container_1 is using the discovered Python interpreter at /usr/bin/python3.12, but
+future installation of another Python interpreter could change the meaning of that path. See
+https://docs.ansible.com/ansible-core/2.17/reference_appendices/interpreter_discovery.html for more information.
+container_1 | CHANGED | rc=0 >>
+root
+[WARNING]: Platform linux on host container_3 is using the discovered Python interpreter at /usr/bin/python3.12, but
+future installation of another Python interpreter could change the meaning of that path. See
+https://docs.ansible.com/ansible-core/2.17/reference_appendices/interpreter_discovery.html for more information.
+container_3 | CHANGED | rc=0 >>
+root
+```
+
+##### **Explanation of the Output:**
+
+1. **Warnings about `sftp` and `scp`:**
+   - Ansible uses different mechanisms for transferring files between your local machine and remote machines. The warnings indicate that `sftp` and `scp` failed to transfer files between the control machine and the containers. These warnings can typically be ignored unless you're transferring files during your playbooks.
+
+2. **Python Interpreter Warning:**
+   - Ansible discovered the Python interpreter path (`/usr/bin/python3.12`) on each container. This warning is informational and tells you that future installations of Python on the host could alter the interpreter path, potentially causing issues with Python-based tasks. In most cases, this does not affect the execution of commands but is just a note.
+
+3. **Result of the `whoami` Command:**
+   - For each container (`container_1`, `container_2`, `container_3`), the output is as follows:
+     - `CHANGED`: This indicates that the `whoami` command was executed, even though it doesn’t change anything on the container itself.
+     - `rc=0`: This indicates that the command ran successfully without any errors.
+     - `root`: This is the expected output of the `whoami` command, showing that the root user is executing the command in each container.
+
+---
+
+### **Running Commands with `sudo` (Privilege Escalation)**
+
+Sometimes, you might need to run commands with elevated privileges (like `root` or using `sudo`). Ansible provides a feature called **Privilege Escalation** using the `become` directive. 
+
+#### **Running Commands as `root` Using `sudo`:**
+
+To run a command as `root`, you need to specify the `--become` flag (for privilege escalation). Here’s how you can run the `whoami` command as `root` using `sudo`:
+
+```bash
+ansible ubuntu_containers -m command -a 'whoami' --become --become-user=root
+```
+
+##### **Explanation of the Command:**
+
+- `--become`: This flag tells Ansible to escalate privileges, similar to running `sudo`.
+- `--become-user=root`: This specifies that the command should be run as the `root` user. By default, it runs as `root`, so this part is optional if you don't need to specify a different user.
+
+#### **Why Use `--become`:**
+
+Ansible will automatically use `sudo` for privilege escalation if you specify `--become`. This is useful if:
+- You are running tasks that require root privileges (like installing packages, modifying system files, etc.).
+- You want to ensure that the command runs as `root` even if the default user is non-root.
+
+##### **Sample Output with `sudo`**
+
+```bash
+container_1 | SUCCESS | rc=0 >>
+root
+container_2 | SUCCESS | rc=0 >>
+root
+container_3 | SUCCESS | rc=0 >>
+root
+```
+
+In this case:
+- The output `SUCCESS` indicates that the command executed successfully on each container.
+- `rc=0` means the command ran without errors.
+- `root` is still the result of the `whoami` command, confirming that it was run with root privileges.
+
+---
+
+
+---
 
 
 ### **9. Privilege Escalation in Ansible**
