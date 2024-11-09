@@ -105,7 +105,9 @@ Now that you've defined the `docker-compose.yml` file, let's build and start the
 1. **Build and Start the Containers:**
 
    ```bash
-docker-compose up -d --build
+    docker-compose up -d --build
+
+    
    ```
 
    This command will:
