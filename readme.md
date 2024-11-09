@@ -503,9 +503,8 @@ timeout = 10
 ```
 ![alt text](image-4.png)
 In this example:
-- **Inventory file** is specified to point to `/home/user/projects/my_project/inventory.ini`.
-- **Remote user** is set to `ansible_user`, meaning all Ansible commands will use this user to connect to hosts unless overridden.
-- **Log file** will record all Ansible actions in `/var/log/ansible.log`.
+- **Inventory file** is specified to point to `./inventory.ini`.
+- **Remote user** is set to `root`, meaning all Ansible commands will use this user to connect to hosts unless overridden.
 - **Timeout** for SSH connections is set to 10 seconds.
 
 ---
