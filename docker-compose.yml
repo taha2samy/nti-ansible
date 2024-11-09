@@ -1,0 +1,23 @@
+version: '3'
+services:
+  ubuntu_sshd_1:
+    build: .
+    container_name: ubuntu_sshd_1
+    tty: True
+    ports:
+      - "2221:22"
+
+  ubuntu_sshd_2:
+    build: .
+    container_name: ubuntu_sshd_2
+    tty: True
+    ports:
+      - "2222:22"
+
+  ubuntu_sshd_3:
+    build: .
+    container_name: ubuntu_sshd_3
+    tty: True
+    ports:
+      - "2223:22"
+

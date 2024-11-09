@@ -1,0 +1,22 @@
+# /etc/ssh/sshd_config
+
+# Disable password-based authentication
+PasswordAuthentication no
+
+# Allow root login only with SSH keys
+PermitRootLogin prohibit-password
+
+# Only allow public key authentication
+PubkeyAuthentication yes
+
+# Disable PAM (Pluggable Authentication Modules)
+UsePAM no
+
+# Disable challenge-response authentication
+ChallengeResponseAuthentication no
+
+# Allow users to connect
+AllowUsers root
+
+# Use a specific port (optional)
+# Port 2221
