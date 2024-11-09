@@ -511,3 +511,57 @@ In this example:
 
 ### **6. Recap and Next Steps**
 
+
+
+### **9. Privilege Escalation in Ansible**
+
+When running tasks that require elevated privileges (e.g., installing packages, modifying system configurations), **Privilege Escalation** allows you to execute commands as a different user with higher permissions (typically `root`). 
+
+In Ansible, privilege escalation is configured using the following settings:
+
+#### **1. `become = True`**
+This setting tells Ansible that it should **escalate privileges** when running commands. It is necessary when you want to run a task that requires higher privileges, such as system-level tasks (installing software, modifying system files, etc.).
+
+- **Explanation**: When `become = True` is enabled, Ansible will use a method (like `sudo`) to run commands as a privileged user (e.g., `root`).
+
+#### **2. `become_method = sudo`**
+This setting specifies the method that Ansible should use to escalate privileges. In this case, it is set to `sudo`, which is the most common and secure method used in Unix-like systems to run commands with superuser privileges.
+
+- **Explanation**: By default, Ansible uses `sudo` to escalate privileges. Other methods like `su` or `pfexec` can also be used depending on the system or security requirements.
+
+#### **3. `become_user = root`**
+This setting specifies which user Ansible should escalate to. Typically, it’s set to `root`, the superuser on Linux systems, but it can be changed to any other user with sufficient privileges.
+
+- **Explanation**: This means that when privilege escalation occurs, the task will be executed as the `root` user (or any other user you specify).
+
+#### **4. `become_ask_pass = True`**
+When set to `True`, Ansible will **prompt you for the password** of the user being escalated to (e.g., `root`), ensuring that you authenticate the action.
+
+- **Explanation**: This option is useful if you want an additional layer of security. Instead of automatically using `sudo` without prompting for the password, this option will ask you to enter the password interactively when you execute a playbook or command that requires privilege escalation.
+
+- **Example**: If you are running a task that requires root privileges, you will be asked to provide the `root` password before Ansible can proceed.
+
+#### **Complete Example of Privilege Escalation Settings:**
+
+```ini
+[privilege_escalation]
+# Enable privilege escalation
+become = True
+
+# Use sudo as the method for privilege escalation
+become_method = sudo
+
+# Escalate to the root user
+become_user = root
+
+# Ask for password when escalating privileges (to root)
+become_ask_pass = True
+```
+you add them if you didnot put them in inventory or want to change them for this satuation`--become --become-user=root'
+---
+
+#### **How Does This Work in Practice?**
+```bash
+ansible ubuntu_containers -m command -a "cat /etc/passwd"
+```
+![image](https://github.com/user-attachments/assets/2f2570aa-8d71-49af-acdc-5dd847a4ed9f)
