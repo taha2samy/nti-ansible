@@ -656,6 +656,7 @@ become_user = root
 # Ask for password when escalating privileges (to root)
 become_ask_pass = True
 ```
+there are `ask_sudo_pass = True` but in `defaults` it ask you if your comand need sudo only
 you add them if you didnot put them in inventory or want to change them for this satuation`--become --become-user=root'
 ---
 
