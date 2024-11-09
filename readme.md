@@ -238,16 +238,4 @@ Here’s a simple diagram to visualize the architecture of your setup:
 
 ---
 
-### **8. Recap and Next Steps**
-
-By the end of this process, you have:
-1. Successfully set up multiple containers using Docker Compose, each running an SSH server.
-2. Configured SSH key-based authentication to allow communication between your Ansible machine and the containers.
-3. Created an Ansible inventory and verified connectivity using the `ping` module.
-
-#### **Next Steps**:
-1. **Explore Ansible Playbooks**: Automate tasks like installing software, copying files, and configuring services on the containers.
-2. **Expand Docker Compose**: Add more services to your Docker Compose file, such as databases or web servers, to build more complex environments.
-3. **Dive into Networking**: Learn about Docker networking to enable communication between the containers or between containers and the host machine.
-
-Let me know if you need further clarification or help with any of the steps!
+### **8. next step**
