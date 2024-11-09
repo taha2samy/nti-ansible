@@ -501,7 +501,7 @@ inventory = ./inventory.ini
 remote_user = root
 timeout = 10
 ```
-
+![alt text](image-4.png)
 In this example:
 - **Inventory file** is specified to point to `/home/user/projects/my_project/inventory.ini`.
 - **Remote user** is set to `ansible_user`, meaning all Ansible commands will use this user to connect to hosts unless overridden.
