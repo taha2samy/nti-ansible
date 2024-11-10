@@ -1,5 +1,3 @@
-\
-
 ---
 
 ## **Day 1: Expanding Ansible Training with Docker Compose and SSH**
@@ -682,3 +680,316 @@ you add them if you didnot put them in inventory or want to change them for this
 ansible ubuntu_containers -m command -a "cat /etc/passwd"
 ```
 ![image](https://github.com/user-attachments/assets/2f2570aa-8d71-49af-acdc-5dd847a4ed9f)
+
+# DAY 2 
+
+
+
+## LAB1
+
+### **Playbook :*
+
+```yaml
+---
+- name: Set up nginx on all webservers
+  hosts: webserver
+  become: yes  # Use sudo privileges if needed for tasks like installing packages or restarting services
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install latest nginx
+      apt:
+        name: nginx
+        state: latest
+
+    - name: Copy index.html to webserver
+      copy:
+        src: ./web/hi.html  # Change this to the correct path on your controller machine
+        dest: /var/www/html/index.html
+        mode: '0644'
+
+    - name: Restart nginx service (SysVinit)
+      service:
+        name: nginx
+        state: restarted
+        enabled: yes
+
+    - name: Ensure nginx is running (SysVinit)
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+```
+
+> [!NOTE]
+>
+> `inventory file` 
+>
+> ```ini
+> [ubuntu_containers]
+> container_1 ansible_host=localhost ansible_port=2221 ansible_user=root ansible_ssh_private_key_file=id_rsa
+> container_2 ansible_host=localhost ansible_port=2222 ansible_user=root ansible_ssh_private_key_file=id_rsa
+> container_3 ansible_host=localhost ansible_port=2223 ansible_user=root ansible_ssh_private_key_file=id_rsa
+> [webserver]
+> container_1 ansible_host=localhost ansible_port=2221 ansible_user=root ansible_ssh_private_key_file=id_rsa
+> ```
+>
+> 
+
+In **Ansible playbooks**, modules are the building blocks that define the tasks you want to automate. Each module is essentially a unit of work, performing a specific action, like installing packages, copying files, or managing services. Understanding basic modules in Ansible playbooks is essential for writing effective automation scripts.
+
+Here’s an explanation of some of the most common and basic Ansible modules you’ll often use in playbooks:
+
+### 1. **`apt`** (Package Management for Debian-based systems)
+- **Purpose**: Manages packages on **Debian**-based systems (like Ubuntu).
+- **Common Use**: Installing, removing, or upgrading software packages.
+  
+  **Example**: Install or update a package:
+  ```yaml
+  - name: Install latest version of nginx
+    apt:
+      name: nginx
+      state: latest
+  ```
+  **Explanation**:
+  - `name`: The name of the package (e.g., `nginx`).
+  - `state`: The desired state of the package. In this case, `latest` ensures the latest version is installed. Other states include `present` (installed) or `absent` (removed).
+
+### 2. **`yum`** (Package Management for RedHat/CentOS-based systems)
+- **Purpose**: Manages packages on **RedHat**-based systems (like CentOS or Fedora).
+- **Common Use**: Installing, removing, or upgrading software packages on RHEL-based systems.
+  
+  **Example**: Install a package:
+  ```yaml
+  - name: Install latest version of nginx
+    yum:
+      name: nginx
+      state: latest
+  ```
+  **Explanation**: Works similarly to the `apt` module, but for systems that use `yum` (or `dnf` in newer Fedora/CentOS systems).
+
+### 3. **`copy`** (Copy files from the controller to the remote machine)
+- **Purpose**: Copies files from the **Ansible controller** to the **remote target machine**.
+- **Common Use**: Copying configuration files, scripts, or other resources to managed nodes.
+  
+  **Example**: Copy a local file to a remote server:
+  ```yaml
+  - name: Copy index.html to webserver
+    copy:
+      src: ./web/index.html
+      dest: /var/www/html/index.html
+      mode: '0644'
+  ```
+  **Explanation**:
+  - `src`: Path to the source file on the controller machine.
+  - `dest`: Path to the destination on the remote server.
+  - `mode`: Sets the permissions on the file (in `chmod` style).
+
+### 4. **`service`** (Manage services on remote nodes)
+- **Purpose**: Ensures that services are started, stopped, restarted, or reloaded.
+- **Common Use**: Managing services like `nginx`, `apache2`, `mysql`, etc.
+  
+  **Example**: Ensure a service is running:
+  ```yaml
+  - name: Ensure nginx is running
+    service:
+      name: nginx
+      state: started
+      enabled: yes
+  ```
+  **Explanation**:
+  - `name`: The name of the service (e.g., `nginx`).
+  - `state`: The desired state of the service (e.g., `started`, `stopped`, `restarted`).
+  - `enabled`: Ensures the service is enabled to start at boot (`yes` or `no`).
+
+### 5. **`file`** (Manage file and directory properties)
+- **Purpose**: Manages file and directory properties, such as permissions, ownership, and whether they exist.
+- **Common Use**: Setting file permissions, creating directories, ensuring files exist, etc.
+  
+  **Example**: Ensure a directory exists and has the correct permissions:
+  ```yaml
+  - name: Ensure the /var/www directory exists
+    file:
+      path: /var/www
+      state: directory
+      mode: '0755'
+  ```
+  **Explanation**:
+  - `path`: The path to the file or directory.
+  - `state`: Whether the item should exist as a directory or file (`directory`, `file`, `absent`).
+  - `mode`: Sets the file or directory permissions.
+
+### 6. **`command`** (Run a command on remote hosts)
+- **Purpose**: Executes commands directly on the remote machine.
+- **Common Use**: Running shell commands or scripts that don’t require the `sudo` privilege.
+
+  **Example**: Run a shell command:
+  ```yaml
+  - name: Run a command on the remote host
+    command: /usr/bin/uptime
+  ```
+  **Explanation**:
+  - `command`: Runs the specified command on the remote system. It’s important to note that this module does not handle shell features like pipes (`|`) or redirects (`>`). For more complex shell operations, use the `shell` module.
+
+### 7. **`shell`** (Run shell commands on remote hosts)
+- **Purpose**: Similar to `command`, but allows for shell features like pipes and redirects.
+- **Common Use**: Running more complex commands or shell scripts that need shell-specific features.
+  
+  **Example**: Run a command with a pipe:
+  ```yaml
+  - name: Check disk usage and output it to a file
+    shell: df -h | tee /tmp/disk_usage.txt
+  ```
+  **Explanation**: The `shell` module allows for running shell commands with shell-specific features like pipes (`|`) and redirects (`>`).
+
+### 8. **`get_url`** (Download files from a URL)
+- **Purpose**: Downloads files from a URL to the target machine.
+- **Common Use**: Downloading installation packages, files, or archives.
+  
+  **Example**: Download a file from the web:
+  ```yaml
+  - name: Download the latest release of nginx
+    get_url:
+      url: http://nginx.org/download/nginx-1.18.0.tar.gz
+      dest: /tmp/nginx.tar.gz
+  ```
+  **Explanation**:
+  - `url`: The URL of the file to download.
+  - `dest`: The destination path where the file will be saved on the remote server.
+
+### 9. **`user`** (Manage user accounts)
+- **Purpose**: Manages user accounts on remote systems.
+- **Common Use**: Creating, removing, or modifying users.
+  
+  **Example**: Create a new user:
+  ```yaml
+  - name: Create a new user
+    user:
+      name: johndoe
+      state: present
+      shell: /bin/bash
+  ```
+  **Explanation**:
+  - `name`: The name of the user.
+  - `state`: Whether the user should exist (`present`) or be removed (`absent`).
+  - `shell`: The shell to assign to the user.
+
+### 10. **`git`** (Manage Git repositories)
+- **Purpose**: Manages Git repositories, cloning them or pulling updates.
+- **Common Use**: Cloning repositories or pulling changes from remote repositories.
+  
+  **Example**: Clone a Git repository:
+  ```yaml
+  - name: Clone a repository
+    git:
+      repo: 'https://github.com/example/repo.git'
+      dest: /home/user/repo
+      clone: yes
+  ```
+  **Explanation**:
+  - `repo`: The URL of the Git repository.
+  - `dest`: The local directory where the repository will be cloned.
+  - `clone: yes`: Ensures that the repository is cloned.
+
+---
+
+### **Basic Task Syntax in Playbooks**:
+Every task in a playbook generally follows this structure:
+
+```yaml
+- name: <task description>
+  <module_name>:
+    <module_options>
+```
+
+- **`name`**: A human-readable description of what the task does.
+- **`module_name`**: The name of the Ansible module (e.g., `apt`, `copy`, `service`, etc.).
+- **`module_options`**: The parameters or options required by the module to perform its task.
+
+---
+
+### **Conclusion:**
+Modules are the fundamental building blocks in Ansible playbooks. They abstract complex tasks, allowing you to automate and manage various system functions with simple, declarative statements. The basic modules like `apt`, `copy`, `service`, `user`, `file`, and `command` can cover most common tasks you'll need when automating infrastructure.
+
+Let me know if you'd like more details about a specific module or task!
+
+#### **1. Play Definition:**
+```yaml
+- name: Set up nginx on all webservers
+  hosts: webserver
+  become: yes  # Use sudo privileges if needed for tasks like installing packages or restarting services
+  tasks:
+```
+
+- `name`: This defines a descriptive name for the playbook. It helps in understanding the purpose of this playbook when running or debugging it.
+- `hosts: webserver`: This specifies that the playbook will run on all hosts in the **`webserver`** group. This group is typically defined in your **Ansible inventory file** (e.g., `hosts` file or dynamic inventory).
+- `become: yes`: This tells Ansible to use **sudo** privileges (or other privilege escalation mechanisms) to perform tasks that require root permissions, like installing packages or restarting services.
+
+#### **2. Task 1: Update apt cache**
+```yaml
+- name: Update apt cache
+  apt:
+    update_cache: yes
+```
+
+- **Purpose**: Updates the **apt** package manager’s cache, ensuring that your system has the latest list of available packages.
+- **Explanation**: Before installing any packages (in this case, Nginx), it is a good practice to refresh the local package index so that Ansible installs the most recent versions.
+
+#### **3. Task 2: Install the latest version of Nginx**
+```yaml
+- name: Install latest nginx
+  apt:
+    name: nginx
+    state: latest
+```
+
+- **Purpose**: Installs or updates **Nginx** to the latest version available in the system’s package repository.
+- **Explanation**: The **`state: latest`** option ensures that Ansible will install Nginx if it’s not already installed, or upgrade it to the latest version if it's already present on the system.
+
+#### **4. Task 3: Copy index.html to the webserver**
+```yaml
+- name: Copy index.html to webserver
+  copy:
+    src: ./web/hi.html  # Change this to the correct path on your controller machine
+    dest: /var/www/html/index.html
+    mode: '0644'
+```
+
+- **Purpose**: Copies an HTML file from your Ansible controller machine to the target webserver, placing it in the default Nginx web directory (`/var/www/html`).
+- **Explanation**:
+  - `src: ./web/hi.html`: The `src` refers to the location of the file on the **controller machine** (the machine running Ansible).
+  - `dest: /var/www/html/index.html`: This is the target location on the **web server** where the `hi.html` file will be copied, replacing the default `index.html` file that Nginx serves.
+  - `mode: '0644'`: Sets the file permissions for the copied file to `0644`, which means it’s readable by all users but writable only by the owner.
+
+#### **5. Task 4: Restart nginx service (SysVinit)**
+```yaml
+- name: Restart nginx service (SysVinit)
+  service:
+    name: nginx
+    state: restarted
+    enabled: yes
+```
+
+- **Purpose**: Restarts the **Nginx** service to apply any configuration changes (such as if new packages were installed or if an update was performed).
+- **Explanation**:
+  - `state: restarted`: Ensures that the Nginx service is restarted. If it’s already running, it will be stopped and started again. This is often needed after installing or updating packages.
+  - `enabled: yes`: Makes sure that the Nginx service is enabled to start automatically when the server reboots.
+
+#### **6. Task 5: Ensure nginx is running**
+```yaml
+- name: Ensure nginx is running (SysVinit)
+  service:
+    name: nginx
+    state: started
+    enabled: yes
+```
+
+- **Purpose**: Ensures that the **Nginx** service is up and running, and that it is enabled to start on boot.
+- **Explanation**:
+  - `state: started`: Ensures that the Nginx service is currently running. If it’s not running, Ansible will start it.
+  - `enabled: yes`: Ensures that the Nginx service will start automatically on system reboot.
+
+---
+
