@@ -1,0 +1,36 @@
+- name: Debug example with tags
+  hosts: webserver
+  tasks:
+    - name: Print message for install task
+      debug:
+        msg: "This task is related to the always process."
+      tags:
+        - always 
+    - name: Print message for install task
+      debug:
+        msg: "This task is related to the installation process."
+      tags:
+        - install
+
+    - name: Print message for configuration task
+      debug:
+        msg: "This task is related to configuring the system."
+      tags:
+        - configure
+
+    - name: Print message for cleanup task
+      debug:
+        msg: "This task is for cleaning up the environment."
+      tags:
+        - cleanup
+
+    - name: Print message for testing task
+      debug:
+        msg: "This task is for testing purposes."
+      tags:
+        - test
+    - name: the end
+      debug:
+        msg: "This task is for never."
+      tags:
+        - never
