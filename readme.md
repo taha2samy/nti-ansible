@@ -2391,3 +2391,268 @@ ok: [localhost] => (item={'key': 'webserver3', 'value': 'lighttpd'}) => {
 - **Dictionary (`web_servers`)**:
   - We use **`dict2items`** to convert a dictionary into a list of `key` and `value` pairs, then loop through it.
   - Access dictionary values using **`item.key`** for the dictionary key and **`item.value`** for the corresponding value
+
+
+
+The **`when`** conditional in Ansible is used to control whether a task is executed based on a given condition. This allows you to run tasks only if certain conditions are met. You can use **`when`** with various types of expressions, including variables, facts, or outputs of previous tasks.
+
+### **Basic Syntax of `when`:**
+```yaml
+- name: Task name
+  command: echo "Hello, World"
+  when: some_condition
+```
+
+- **`some_condition`**: A condition that evaluates to `True` or `False`. If it's `True`, the task will run; if it's `False`, the task will be skipped.
+
+---
+
+### **Examples of `when` Usage:**
+
+#### **Example 1: Simple Variable Check**
+You can use **`when`** to execute a task only if a certain variable is defined or has a specific value.
+
+##### **Playbook Example:**
+```yaml
+- name: Example of using `when` with a variable
+  hosts: localhost
+  vars:
+    install_nginx: true  # Change to false to skip this task
+  tasks:
+    - name: Install nginx
+      apt:
+        name: nginx
+        state: present
+      when: install_nginx == true  # Only runs if install_nginx is true
+```
+
+### **Explanation:**
+- The **`when`** condition checks if the variable `install_nginx` is `true`.
+- If `install_nginx == true`, the task will execute and install nginx.
+- If `install_nginx` is set to `false`, this task will be skipped.
+
+---
+
+#### **Example 2: Conditional Execution Based on Host Variables**
+You can use **`when`** to execute a task based on a variable that is set for a specific host.
+
+##### **Playbook Example:**
+```yaml
+- name: Example of using `when` with host variables
+  hosts: localhost
+  vars:
+    webserver_role: "apache"  # Can change to "nginx" to test the condition
+  tasks:
+    - name: Install Apache
+      apt:
+        name: apache2
+        state: present
+      when: webserver_role == "apache"  # Only runs if webserver_role is apache
+
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: present
+      when: webserver_role == "nginx"  # Only runs if webserver_role is nginx
+```
+
+### **Explanation:**
+- The task to install Apache will only run if the `webserver_role` is set to `"apache"`.
+- Similarly, the task to install Nginx will only run if the `webserver_role` is set to `"nginx"`.
+
+---
+
+#### **Example 3: Conditional Execution Based on the Output of a Task**
+You can use **`when`** to control the execution of tasks based on the results of previous tasks.
+
+##### **Playbook Example:**
+```yaml
+- name: Example of using `when` based on task output
+  hosts: localhost
+  tasks:
+    - name: Check if nginx is installed
+      command: dpkg -l nginx
+      register: nginx_installed
+      ignore_errors: yes  # Prevent the playbook from failing if nginx is not found
+
+    - name: Install nginx
+      apt:
+        name: nginx
+        state: present
+      when: nginx_installed.rc != 0  # Only runs if nginx is not installed
+```
+
+### **Explanation:**
+- The first task checks if nginx is installed using the **`dpkg -l nginx`** command and registers the result as `nginx_installed`.
+- The second task installs nginx **only** if the previous task (`nginx_installed.rc`) did **not return a successful exit code (`0`)**. This is controlled by the `when` condition.
+  - `nginx_installed.rc` is the return code (exit status) of the previous command. If it's not `0` (i.e., nginx is not installed), the task will run and install nginx.
+
+---
+
+#### **Example 4: Using `when` with Complex Expressions**
+You can combine multiple conditions using **`and`** or **`or`** for more complex conditions.
+
+##### **Playbook Example:**
+```yaml
+- name: Example of using `when` with complex conditions
+  hosts: localhost
+  vars:
+    install_apache: true
+    apache_version: "2.4"  # Example version to install
+  tasks:
+    - name: Install Apache if conditions are met
+      apt:
+        name: apache2
+        state: present
+      when: install_apache == true and apache_version == "2.4"
+```
+
+### **Explanation:**
+- The task to install Apache will only run if:
+  - **`install_apache == true`**
+  - **`apache_version == "2.4"`**
+
+This example shows how you can combine multiple conditions in the **`when`** statement to make a task conditional based on more than one variable.
+
+---
+
+#### **Example 5: Skipping a Task When a Condition is Met**
+You can use **`when`** to skip a task based on the condition.
+
+##### **Playbook Example:**
+```yaml
+- name: Skip a task based on condition
+  hosts: localhost
+  vars:
+    is_production: true  # Set to false to skip the cleanup task
+  tasks:
+    - name: Clean up temporary files
+      file:
+        path: /tmp/tempfile
+        state: absent
+      when: is_production == false  # This task will be skipped if is_production is true
+```
+
+### **Explanation:**
+- The **`when`** condition checks the value of `is_production`. 
+  - If `is_production == false`, the cleanup task will run and delete `/tmp/tempfile`.
+  - If `is_production == true`, the cleanup task will be skipped.
+
+---
+
+### **Summary of `when` Conditional Logic:**
+
+1. **Basic Usage**:
+   - You can run tasks conditionally by checking the value of a variable.
+2. **Combining Conditions**:
+   - Use logical operators like **`and`** and **`or`** to combine multiple conditions.
+3. **Task Output Conditions**:
+   - Run tasks based on the results of previous tasks, such as using **`register`** to capture the output of a task and referencing it in the **`when`** condition.
+4. **Skipping Tasks**:
+   - You can skip tasks by using **`when`** to check for specific conditions and setting it to `false` when you don't want the task to run.
+
+To run a task conditionally based on the operating system (Linux or Windows), you can use Ansible's built-in **`ansible_facts`** to detect the operating system type. Ansible gathers facts by default, which includes information about the target system like its OS type, version, and more. 
+
+You can then use the **`when`** conditional to run different tasks depending on whether the target system is **Linux** or **Windows**.
+
+Here's an example of how to use **`when`** to print a debug message if the system is **Linux** or **Windows**:
+
+### **Example Playbook:**
+
+```yaml
+- name: Run debug messages based on OS type
+  hosts: all  # Can be replaced with a specific group or host
+  gather_facts: yes  # This will gather the system facts
+
+  tasks:
+    - name: Debug message for Linux systems
+      debug:
+        msg: "This is a Linux system."
+      when: ansible_facts['os_family'] == 'Linux'  # Runs if the system is Linux
+
+    - name: Debug message for Windows systems
+      debug:
+        msg: "This is a Windows system."
+      when: ansible_facts['os_family'] == 'Windows'  # Runs if the system is Windows
+```
+
+---
+
+### **Explanation:**
+
+1. **`gather_facts: yes`**: This tells Ansible to collect system information (facts) before running tasks. This information includes details like the OS family, distribution, version, etc.
+
+2. **`ansible_facts['os_family']`**: This is an Ansible fact that provides information about the family of the operating system (e.g., `Linux`, `Windows`, etc.). It’s used to conditionally run tasks based on the operating system.
+
+3. **`when: ansible_facts['os_family'] == 'Linux'`**: The first debug message will be printed only on Linux systems, as it checks the **`os_family`** fact for a value of `'Linux'`.
+
+4. **`when: ansible_facts['os_family'] == 'Windows'`**: The second debug message will be printed only on Windows systems, as it checks the **`os_family`** fact for a value of `'Windows'`.
+
+---
+
+### **Output Example:**
+
+- If you run this playbook on a **Linux** host:
+  ```text
+  TASK [Debug message for Linux systems] ***
+  ok: [localhost] => {
+      "msg": "This is a Linux system."
+  }
+  
+  TASK [Debug message for Windows systems] ***
+  skipping: [localhost]
+  ```
+
+- If you run this playbook on a **Windows** host:
+  ```text
+  TASK [Debug message for Linux systems] ***
+  skipping: [localhost]
+  
+  TASK [Debug message for Windows systems] ***
+  ok: [localhost] => {
+      "msg": "This is a Windows system."
+  }
+  ```
+
+---
+
+### **Using `ansible_facts` to Identify Other OS Properties:**
+
+You can use other facts for more granular checks. For example:
+- **`ansible_facts['distribution']`**: Checks for the specific Linux distribution, e.g., `Ubuntu`, `CentOS`.
+- **`ansible_facts['distribution_version']`**: Checks the version of the Linux distribution.
+
+Here’s an example using **`ansible_facts['distribution']`**:
+
+```yaml
+- name: Run debug message based on specific Linux distribution
+  hosts: all
+  gather_facts: yes
+
+  tasks:
+    - name: Debug message for Ubuntu systems
+      debug:
+        msg: "This is an Ubuntu system."
+      when: ansible_facts['distribution'] == 'Ubuntu'
+
+    - name: Debug message for CentOS systems
+      debug:
+        msg: "This is a CentOS system."
+      when: ansible_facts['distribution'] == 'CentOS'
+```
+
+In this example, Ansible checks the **`distribution`** fact and prints messages based on whether the system is **Ubuntu** or **CentOS**.
+
+---
+
+### **Summary:**
+- **`ansible_facts['os_family']`** can be used to detect whether the system is running **Linux** or **Windows**.
+- The **`when`** conditional allows you to run tasks based on OS type.
+- You can also use other facts like **`distribution`**, **`distribution_version`**, and more to create more complex conditions.
+
+The **`when`** directive is a powerful tool in Ansible that allows you to create more flexible playbooks by defining conditions under which tasks should or should not be executed. You can use it to:
+- Run tasks based on variable values.
+- Skip tasks conditionally.
+- Combine multiple conditions for more complex logic.
+
+Let me know if you'd like more examples or need further clarification!
