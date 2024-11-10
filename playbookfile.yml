@@ -1,0 +1,35 @@
+---
+- name: Ansible Playbook to Ping, Create, Remove File, and Echo Date/Hostname
+  hosts: all
+  become: yes  
+  tasks:
+
+    - name: Ping the host
+      ping:
+    - name: Create a file
+      file:
+        path: "/tmp/testfile.txt"
+        state: touch  # Create the file if it doesn't exist
+
+    - name: Remove the file
+      file:
+        path: "/tmp/testfile.txt"
+        state: absent  # Remove the file
+
+    - name: Echo the current date
+      command: date
+      register: current_date
+
+    - name: Display the current date
+      debug:
+        msg: "Current date: {{ current_date.stdout }}"
+
+    - name: Echo the hostname
+      command: hostname
+      register: host_name
+
+    - name: Display the hostname
+      debug:
+        msg: "Hostname: {{ host_name.stdout }}"
+    - name: hi nti
+      command: echo hi nti
