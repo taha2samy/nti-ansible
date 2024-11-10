@@ -1,14 +1,26 @@
 - name: Debug example with tags
   hosts: webserver
+  vars:
+    our_name: taha_samy
+    users:
+      - name: "ahmed"
+        role: "admin"
+      - name: "sara"
+        role: "user"
+  combined_vars:
+    users_list: "{{ our_name }}+users"
+    other: "{{ users }}"
   tasks:
     - name: Print message for install task
       debug:
-        msg: "This task is related to the always process."
+        msg: "This task is {{our_name}} related to the always process."
       tags:
         - always 
+      register: task_output  
+
     - name: Print message for install task
       debug:
-        msg: "This task is related to the installation process."
+        msg: "from always {{task_output.msg}} ||| This task is related to the installation process."
       tags:
         - install
 
@@ -32,5 +44,9 @@
     - name: the end
       debug:
         msg: "This task is for never."
+    
       tags:
         - never
+    - name: list of users users
+      debug:
+        var: users_list
