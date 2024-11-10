@@ -1,0 +1,26 @@
+- name: Loop over variables with list and dictionary
+  hosts: all
+  gather_facts: no
+  vars:
+    # A list of dictionaries (users with their roles)
+    users_list:
+      - { name: "ahmed", role: "admin" }
+      - { name: "sara", role: "user" }
+      - { name: "ali", role: "developer" }
+    
+    # A dictionary with web server configurations
+    web_servers:
+      webserver1: "nginx"
+      webserver2: "apache"
+      webserver3: "lighttpd"
+
+  tasks:
+    - name: Print user details from list
+      debug:
+        msg: "User {{ item.name }} has role {{ item.role }}"
+      loop: "{{ users_list }}"
+
+    - name: Print each web server's name and its software
+      debug:
+        msg: "Server: {{ item.key }} is running {{ item.value }}"
+      loop: "{{ web_servers | dict2items }}"

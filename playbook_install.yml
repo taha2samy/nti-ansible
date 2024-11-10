@@ -1,0 +1,12 @@
+- name: Install multiple packages
+  hosts: webserver
+  become: yes  # Ensure the task is run with elevated privileges
+  tasks:
+    - name: Install required packages
+      apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - nginx
+        - vim
+        - curl

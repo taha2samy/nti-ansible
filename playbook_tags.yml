@@ -7,9 +7,7 @@
         role: "admin"
       - name: "sara"
         role: "user"
-  combined_vars:
-    users_list: "{{ our_name }}+users"
-    other: "{{ users }}"
+
   tasks:
     - name: Print message for install task
       debug:
@@ -49,4 +47,4 @@
         - never
     - name: list of users users
       debug:
-        var: users_list
+        var: users
