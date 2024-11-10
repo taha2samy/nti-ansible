@@ -1,0 +1,32 @@
+---
+- name: Set up nginx on all webservers
+  hosts: webserver
+  become: yes  # Use sudo privileges if needed for tasks like installing packages or restarting services
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install latest nginx
+      apt:
+        name: nginx
+        state: latest
+
+    - name: Copy index.html to webserver
+      copy:
+        src: ./web/hi.html  # Change this to the correct path on your controller machine
+        dest: /var/www/html/index.html
+        mode: '0644'
+
+    - name: Restart nginx service (SysVinit)
+      service:
+        name: nginx
+        state: restarted
+        enabled: yes
+
+    - name: Ensure nginx is running (SysVinit)
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+
