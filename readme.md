@@ -1,23 +1,10 @@
-Got it! Let's expand your explanation to include the use of **Docker Compose** to run three containers with **SSHD** (SSH Daemon) running on each container, and how these containers can be used for training with Ansible. I'll also explain how the private key (`id_rsa`) is shared between the containers for SSH access and give a visual representation of the setup.
+\
 
 ---
 
 ## **Day 1: Expanding Ansible Training with Docker Compose and SSH**
 
-### **Objective:**
-Learn how to use **Docker Compose** to launch multiple containers, configure **SSHD** on each container, and then manage these containers with **Ansible** using a shared **private key** for SSH authentication.
-
----
-
-### **1. What is Docker Compose?**
-
-**Docker Compose** is a tool for defining and running multi-container Docker applications. You use a `docker-compose.yml` file to configure the services, networks, and volumes required for your application, which in this case will be a set of containers running **SSH Daemon (SSHD)**.
-
-With Docker Compose, you can easily start, stop, and manage multiple containers as a single application. This makes it ideal for testing multi-container setups, like the one you're doing with Ansible.
-
----
-
-### **2. Docker Compose Setup for SSH Containers**
+### **1. Docker Compose Setup for SSH Containers**
 
 Let's start by defining a **Docker Compose configuration** that will create three containers with **SSHD** running in each. These containers will be able to communicate with each other via SSH using the same private key (`id_rsa`).
 
@@ -58,7 +45,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Update the package list and install openssh-server
 RUN apt-get update && \
-    apt-get install -y openssh-server && \
+    apt-get install -y openssh-server sudo && \
     mkdir /var/run/sshd
 
 # Set a root password for SSH access (optional)
@@ -73,6 +60,23 @@ COPY id_rsa.pub /root/.ssh/authorized_keys
 # Set proper permissions for the authorized_keys file
 RUN chmod 600 /root/.ssh/authorized_keys
 
+# Create the new user (nti) and add to sudo group (optional, if needed)
+RUN useradd -m -s /bin/bash nti && \
+    echo 'nti:nti' | chpasswd && \
+    usermod -aG sudo nti
+
+# Create the .ssh directory for the new user and set proper permissions
+RUN mkdir -p /home/nti/.ssh && chmod 700 /home/nti/.ssh
+
+# Copy the SSH public key into the authorized_keys file for the new user
+COPY id_rsa.pub /home/nti/.ssh/authorized_keys
+
+# Set proper permissions for the authorized_keys file
+RUN chmod 600 /home/nti/.ssh/authorized_keys
+
+# Set proper permissions for the home directory
+RUN chown -R nti:nti /home/nti
+
 # Copy the custom sshd_config file into the container
 COPY sshd_config /etc/ssh/sshd_config
 
@@ -81,6 +85,7 @@ EXPOSE 22
 
 # Start SSH service when the container runs
 CMD ["/usr/sbin/sshd", "-D"]
+
 
 ```
 
@@ -149,13 +154,25 @@ ijkl91011      ubuntu:latest   "/usr/sbin/sshd -D"      2 minutes ago    Up 2 mi
 Now that the containers are running, you can test SSH access to each container. Use the following commands from your **host machine** (or Ansible machine) to connect to each container:
 
 ```bash
-sudo ssh -i id_rsa -p 2221 root@localhost  # Access container_1
-sudo ssh -i id_rsa -p 2222 root@localhost  # Access container_2
-sudo ssh -i id_rsa -p 2223 root@localhost  # Access container_3
+sudo ssh -i id_rsa -p 2221 root@localhost  # Access container_1 or nti@localhost    
+sudo ssh -i id_rsa -p 2222 root@localhost  # Access container_2 or nti@localhost
+sudo ssh -i id_rsa -p 2223 root@localhost  # Access container_3 or nti@localhost
 ```
 ![alt text](image-1.png)
 
 If the connection is successful, you'll be logged into each container's shell, confirming that SSH access is working.
+
+> [!NOTE]
+>
+> ```bash
+> cat ~/.ssh/id_rsa.pub | ssh -p 2222 root@localhost 'mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys'
+> cat ~/.ssh/id_rsa.pub | ssh -p 2223 root@localhost 'mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys'
+> cat ~/.ssh/id_rsa.pub | ssh -p 2221 root@localhost 'mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys'
+> ```
+>
+> 
+
+
 
 ---
 
@@ -169,9 +186,9 @@ Update your Ansible inventory to include the SSH access details for each contain
 
 ```ini
 [ubuntu_containers]
-container_1 ansible_host=localhost ansible_port=2221 ansible_user=root ansible_ssh_private_key_file=id_rsa
-container_2 ansible_host=localhost ansible_port=2222 ansible_user=root ansible_ssh_private_key_file=id_rsa
-container_3 ansible_host=localhost ansible_port=2223 ansible_user=root ansible_ssh_private_key_file=id_rsa
+container_1 ansible_host=localhost ansible_port=2221 ansible_user=nti ansible_ssh_private_key_file=id_rsa
+container_2 ansible_host=localhost ansible_port=2222 ansible_user=nti ansible_ssh_private_key_file=id_rsa
+container_3 ansible_host=localhost ansible_port=2223 ansible_user=nti ansible_ssh_private_key_file=id_rsa
 ```
 
 This file tells Ansible how to connect to the containers using SSH, specifying:
