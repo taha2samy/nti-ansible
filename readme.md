@@ -993,3 +993,335 @@ Let me know if you'd like more details about a specific module or task!
 
 ---
 
+## Tags
+
+### **Explanation of Tags in Ansible**
+
+In Ansible, **tags** are a powerful mechanism that allows you to control which tasks or parts of a playbook get executed. By assigning tags to tasks, you can selectively run or skip tasks based on specific criteria when you execute the playbook. This makes it possible to target specific actions without having to run the entire playbook.
+
+Tags can be used to control the flow of execution in large and complex playbooks, enabling more efficient and modular automation.
+
+---
+
+### **What are Tags?**
+Tags in Ansible are labels you assign to individual tasks, blocks, or plays within a playbook. Once a task is tagged, you can then run the playbook with the `--tags` option to execute only the tasks that are associated with those tags.
+
+### **Why Use Tags?**
+1. **Selective Task Execution**: You may want to run only certain parts of a playbook, for example, to test a specific configuration or run specific tasks on a particular host.
+2. **Efficient Playbook Management**: When playbooks are large and contain many tasks, tags allow you to focus on specific tasks, like installation, configuration, or cleanup, without having to execute everything.
+3. **Reusability**: Tags allow you to create reusable tasks that can be executed in different contexts with different playbooks, depending on the tags you pass.
+
+---
+
+### **Basic Syntax of Tags**
+
+You can assign tags to individual tasks, blocks, or plays using the `tags` parameter. Here's the basic syntax:
+
+```yaml
+tasks:
+  - name: Install nginx
+    apt:
+      name: nginx
+      state: present
+    tags:
+      - install
+      - webserver
+
+  - name: Start nginx service
+    service:
+      name: nginx
+      state: started
+    tags:
+      - start
+      - webserver
+```
+
+In this example:
+- The first task installs **nginx**, and it's tagged with `install` and `webserver`.
+- The second task starts the **nginx service**, and it's tagged with `start` and `webserver`.
+
+### **How to Run Playbooks with Tags**
+
+When running the playbook, you can specify which tags to include using the `--tags` option. This will only execute the tasks associated with those tags.
+
+For example:
+
+```bash
+ansible-playbook playbook.yml --tags install
+```
+
+This command will run only the tasks that are tagged with `install` (in this case, the `Install nginx` task).
+
+You can specify multiple tags by separating them with commas:
+
+```bash
+ansible-playbook playbook.yml --tags "install,webserver"
+```
+
+This command will run all tasks that are tagged with either `install` or `webserver`.
+
+Alternatively, you can exclude certain tags using `--skip-tags`:
+
+```bash
+ansible-playbook playbook.yml --skip-tags "start"
+```
+
+This will run all tasks except those tagged with `start`.
+
+### **Tagging Different Components: Tasks, Blocks, and Plays**
+
+You can apply tags not only to individual tasks but also to **blocks** or **plays**.
+
+#### **1. Tags for Tasks**
+
+Tags are most commonly used for tasks to control which steps in the playbook will run. For example:
+
+```yaml
+tasks:
+  - name: Install nginx
+    apt:
+      name: nginx
+      state: present
+    tags:
+      - install
+
+  - name: Install Apache
+    apt:
+      name: apache2
+      state: present
+    tags:
+      - install
+      - webserver
+```
+
+Both tasks are tagged with `install`, so running:
+
+```bash
+ansible-playbook playbook.yml --tags install
+```
+
+will execute both `Install nginx` and `Install Apache`.
+
+#### **2. Tags for Blocks**
+
+You can also tag **blocks** of tasks. Blocks group tasks together, so if you tag the block, all tasks inside the block are affected.
+
+```yaml
+tasks:
+  - block:
+      - name: Install nginx
+        apt:
+          name: nginx
+          state: present
+      - name: Start nginx service
+        service:
+          name: nginx
+          state: started
+    tags:
+      - webserver
+```
+
+If you run the playbook with `--tags webserver`, both tasks inside the block will be executed.
+
+#### **3. Tags for Plays**
+
+Tags can be applied to an entire play as well. When a play is tagged, all tasks within that play will be executed if the tag is provided.
+
+```yaml
+- name: Install and configure web servers
+  hosts: webservers
+  tags:
+    - webserver
+  tasks:
+    - name: Install nginx
+      apt:
+        name: nginx
+        state: present
+
+    - name: Start nginx
+      service:
+        name: nginx
+        state: started
+```
+
+If you run:
+
+```bash
+ansible-playbook playbook.yml --tags webserver
+```
+
+both tasks in the play will be executed because the play itself is tagged with `webserver`.
+
+### **Advanced Usage of Tags**
+
+#### **1. Combining Tags**
+
+You can combine tags and run specific tasks that match any of the provided tags. For instance:
+
+```bash
+ansible-playbook playbook.yml --tags "install,configure"
+```
+
+This will execute all tasks tagged with either `install` **or** `configure`. It’s an **OR** logic between tags.
+
+#### **2. Skipping Tasks Using `--skip-tags`**
+
+You can also use `--skip-tags` to exclude certain tasks. For example, if you want to run everything except tasks tagged with `debug`, you would run:
+
+```bash
+ansible-playbook playbook.yml --skip-tags debug
+```
+
+This would run all tasks in the playbook except those that are tagged with `debug`.
+
+### **Explaining `always` and `never` Tags with the `debug` Module in Ansible**
+
+In Ansible, the `tags` feature is a powerful tool for controlling which tasks in a playbook get executed. When combined with the `debug` module, tags like `always` and `never` offer even more control over the execution flow. 
+
+Let's dive into how these tags work, particularly when used in conjunction with the `debug` module, to display messages or variable values based on specific execution conditions.
+
+### **What are `always` and `never` Tags?**
+
+- **`always` Tag**: Ensures that a task is always executed, regardless of the success or failure of previous tasks.
+- **`never` Tag**: Ensures that a task is never executed, regardless of other conditions or tags.
+
+These tags are helpful in controlling critical tasks that should run in every case (`always`), or tasks that you want to avoid running entirely (`never`), regardless of the rest of the playbook's logic.
+
+### **How to Use `always` and `never` with `debug`**
+
+When you use the `debug` module, you can print out messages, variable values, or conditions to understand the flow of your playbook. By combining `always` and `never` with `debug`, you can control when certain debugging tasks should or should not run.
+
+#### **1. `always` Tag with `debug` Module**
+
+The `always` tag guarantees that the task will run no matter what, even if other tasks fail or are skipped. This can be useful when you want to ensure that certain cleanup or logging tasks are always executed.
+
+##### **Example with `always` Tag:**
+
+```yaml
+---
+- name: Always execute debug task
+  hosts: localhost
+  tasks:
+    - name: Print debug message (always)
+      debug:
+        msg: "This task will always run."
+      tags:
+        - always
+
+    - name: Print another debug message
+      debug:
+        msg: "This task will run only if 'debug' tag is passed."
+      tags:
+        - debug
+```
+
+#### **Explanation**:
+- The first task is marked with the `always` tag, so it will always print the message **"This task will always run."** regardless of whether other tasks are skipped or fail.
+- The second task will only be executed if you explicitly run the playbook with the `--tags debug` flag.
+
+##### **Running the Playbook**:
+If you run the playbook without any tags, both tasks will run. If you use `--tags debug`, only the second task will run, but the task with the `always` tag will still run regardless of what tags you specify.
+
+```bash
+ansible-playbook playbook.yml --tags debug
+```
+
+Output will include both:
+- "This task will always run."
+- "This task will run only if 'debug' tag is passed."
+
+#### **2. `never` Tag with `debug` Module**
+
+The `never` tag prevents a task from being executed under any circumstances. This can be useful if you want to explicitly ensure that certain tasks are ignored, regardless of any other conditions.
+
+##### **Example with `never` Tag:**
+
+```yaml
+---
+- name: Never execute debug task
+  hosts: localhost
+  tasks:
+    - name: Print debug message (never)
+      debug:
+        msg: "This task will never run."
+      tags:
+        - never
+
+    - name: Print another debug message (if not 'never')
+      debug:
+        msg: "This task will run unless 'never' is set."
+      tags:
+        - debug
+```
+
+#### **Explanation**:
+- The first task is tagged with `never`. This means that **this task will never run**, even if you specify `--tags debug`.
+- The second task will execute only if you run the playbook with the `--tags debug` flag.
+
+##### **Running the Playbook**:
+If you run the playbook without any tags, neither task will execute. If you use `--tags debug`, only the second task will run, and the task with the `never` tag will be skipped regardless of the conditions.
+
+```bash
+ansible-playbook playbook.yml --tags debug
+```
+
+Output will include:
+- "This task will run unless 'never' is set."
+
+#### **3. Combining `always` and `never` Tags**
+
+You can combine `always` and `never` tags with other tags to gain more control over task execution. For example, you may want a specific cleanup task to always run at the end of the playbook, but prevent certain tasks from running based on the situation.
+
+##### **Example with Both `always` and `never` Tags**:
+
+```yaml
+---
+- name: Example with always and never tags
+  hosts: localhost
+  tasks:
+    - name: Debug message always printed (always)
+      debug:
+        msg: "This message is always printed."
+      tags:
+        - always
+
+    - name: Debug message that will never print (never)
+      debug:
+        msg: "This message should never print."
+      tags:
+        - never
+
+    - name: Debug message printed only with 'install' tag
+      debug:
+        msg: "This message is printed only with 'install' tag."
+      tags:
+        - install
+```
+
+#### **Explanation**:
+- **First Task**: Will always print the message **"This message is always printed."**, no matter what.
+- **Second Task**: Will **never** print the message **"This message should never print."** because it is tagged with `never`.
+- **Third Task**: Will print the message only when you run the playbook with the `--tags install` flag.
+
+##### **Running the Playbook**:
+1. If you run the playbook **without tags**:
+   - Only the first task will run because it is tagged with `always`.
+2. If you run the playbook with `--tags install`:
+   - The first and third tasks will run, but the second task with the `never` tag will be skipped.
+
+```bash
+ansible-playbook playbook.yml --tags install
+```
+
+Output will include:
+- "This message is always printed."
+- "This message is printed only with 'install' tag."
+
+### **Key Points about `always` and `never` Tags**:
+- **`always`**: Ensures the task is executed no matter what. Useful for tasks like cleanup or logging that you always want to execute, regardless of the outcome of other tasks.
+- **`never`**: Prevents the task from executing. It is useful when you need to explicitly prevent certain tasks from running, even if they are part of the playbook.
+
+### **Combining Tags for More Control**
+- You can use `always` and `never` alongside other tags to create highly flexible playbook executions. For instance, you can ensure that a certain task always runs, but allow others to be conditionally executed based on tags you specify at runtime.
+  
+### 
