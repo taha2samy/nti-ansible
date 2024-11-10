@@ -1,5 +1,3 @@
----
-
 ## **Day 1: Expanding Ansible Training with Docker Compose and SSH**
 
 ### **1. Docker Compose Setup for SSH Containers**
