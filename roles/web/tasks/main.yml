@@ -1,0 +1,40 @@
+- name: Install the package
+  apt:
+    name: "{{ package_name }}"
+    state: present
+  register: install_result
+  become: yes
+- name: Print the database password
+  debug:
+    msg: "The database password is {{ key }}"
+- name: Copy files to the target system
+  copy:
+    src: "{{ item }}"
+    dest: "/etc/nginx/{{ item }}"  
+  loop: "{{ files_to_conf }}"
+
+- name: Copy html page
+  copy:
+    src: "{{ item }}"
+    dest: "/var/www/html/{{ item }}"  
+  loop: "{{ files_to_web }}"
+
+
+- name: Render and copy template files to the web root
+  template:
+    src: "{{ item }}"
+    dest: "/var/www/html/{{ item | basename | replace('.j2', '') }}"
+    mode: '0644'
+    owner: root
+    group: root
+  loop: "{{ files_to_deploy }}"
+  when: files_to_deploy is defined
+
+
+
+- name: Restart the service if files were copied
+  service:
+    name: nginx
+    state: restarted
+  become: yes
+

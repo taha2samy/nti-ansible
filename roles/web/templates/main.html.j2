@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to {{ ansible_hostname }}'s Website</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #0073e6;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .server-info {
+            background-color: #e9f7fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .server-info h2 {
+            color: #00579e;
+        }
+        .server-info ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .server-info li {
+            padding: 5px 0;
+        }
+        .highlight {
+            font-weight: bold;
+        }
+        .network-info {
+            background-color: #e9f7fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .network-info h3 {
+            color: #00579e;
+        }
+        .network-info ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .network-info li {
+            padding: 5px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Welcome to the homepage of hostname {{ ansible_hostname }}!</h1>
+        <p>This page is served by Nginx on the server: <span class="highlight">{{ ansible_hostname }}</span>.</p>
+
+        <!-- Server Information -->
+        <div class="server-info">
+            <h2>Server Information</h2>
+            <ul>
+                <li><strong>Operating System:</strong> {{ ansible_distribution }} {{ ansible_distribution_version }}</li>
+                <li><strong>CPU Architecture:</strong> {{ ansible_architecture }}</li>
+                <li><strong>Memory:</strong> {{ ansible_memtotal_mb }} MB</li>
+                <li><strong>CPU Cores:</strong> {{ ansible_processor_cores }}</li>
+                <li><strong>Uptime:</strong> {{ ansible_uptime_seconds }} seconds</li>
+                <li><strong>Ansible Version:</strong> {{ ansible_version.full }}</li>
+            </ul>
+        </div>
+
+        <!-- Network Information -->
+        
+        </div>
+    </div>
+
+</body>
+</html>

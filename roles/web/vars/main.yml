@@ -1,0 +1,8 @@
+package_name: nginx  # Name of the package to install
+files_to_conf:  # Configuration files to copy to /etc/nginx/
+  - config.conf
+  - other_file.conf
+files_to_web:  # Web files to copy to the web root directory
+  - index.html
+files_to_deploy:
+  - main.html.j2
